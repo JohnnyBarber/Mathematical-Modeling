@@ -1,0 +1,613 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset0 Courier New;}}
+{\*\generator Riched20 10.0.16299}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\qc\f0\fs22\lang9 Code\par
+
+\pard\sa200\sl276\slmult1 1.\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Spyder Editor\par
+\par
+This is a temporary script file.\par
+"""\par
+import math\par
+import numpy\par
+from matplotlib.pyplot import *\par
+from scipy import *\par
+\par
+\par
+def sterling(n):\par
+    x = math.factorial(n)/(math.sqrt(2*math.pi*n)*(n/math.e)**n)\par
+    return x\par
+\par
+t = linspace(1,12,12)\par
+\par
+i = 0\par
+y = zeros((1,12))\par
+z = zeros((1,12))\par
+while i < 12:\par
+    y[0,i] = sterling(t[i])\par
+    z[0,i] = 1\par
+    i += 1\par
+\par
+y = hstack(y)\par
+z = hstack(z)\par
+\par
+print()\par
+\par
+figure(1,figsize=(10,5))\par
+plot(t, y)\par
+plot(t, z, '--')\par
+xlabel('n',fontsize=18)\par
+ylabel('Value of the function',fontsize=18)\par
+legend([r'$\\frac\{n!\}\{\\sqrt\{2n\\pi\}(\\frac\{n\}\{e\})^n\}$','1'],loc = 0)\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+3.\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Wed Mar  7 15:30:27 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+from scipy import floor, cumsum, array, linspace, cos, pi, rand, loadtxt\par
+from scipy.stats import poisson\par
+from scipy.optimize import fminbound\par
+from matplotlib.pyplot import *\par
+import time\par
+\par
+def norm(x,e):\par
+    return sum(abs(x)**e)**(1./e)\par
+\par
+def rndBinomial(p, n, replicas=1):\par
+    if replicas == 1:\par
+        return int(sum(floor(rand(n) + p)))\par
+    trials = [ rndBinomial(p,n) for i in xrange(replicas)]\par
+    return trials\par
+\par
+def main():\par
+    # load data\par
+    particle = loadtxt('p3 data.txt',delimiter = ',')\par
+    x, y = map(array, zip(*particle))\par
+    N = sum(y)\par
+\par
+    Y = y*1./N\par
+    # distribution fitting\par
+    def fit_error(L_guess):\par
+        # calculate the distance between our guess and the data\par
+        z = poisson.pmf(x, L_guess)\par
+        return norm(Y-z, 1)/norm(Y,1) # can be any p-norm\par
+    L_best = fminbound(fit_error, 1e-5, 6-1e-5)\par
+    err_best = fit_error(L_best)\par
+    print("Best fit: L = %f,  error = %f"%(L_best, fit_error(L_best)))\par
+\par
+    # generate data for animation\par
+    F = [ (p, fit_error(p)) for p in linspace(1e-4,6-1e-4, 137) ]\par
+    u, v = map(array, zip(*F))\par
+\par
+    # draw basic figure\par
+    fig = figure()\par
+\par
+    subplot(2,1,2)\par
+    plot(u, v, 'b-')\par
+    #plot( L_best, fit_error(L_best), 'ko')\par
+    marker_fit_error = plot( u[2], v[2], 'ro').pop()\par
+    ylim(0,1)\par
+    xlabel('Poisson intensity $\\lambda$')\par
+\par
+    subplot(2,1,1)\par
+    plot(x, y, 'ko')\par
+    z = poisson.pmf(x, L_best)\par
+    width = .3\par
+    xw = x-width*.5\par
+    bar_ob = bar(xw, z*N, width, color='r')\par
+    ttl = 'N = %d observations, $\\lambda_\{best\} = %.3f$, $Err_\{best\} = %1.2g$'\par
+    title(ttl%(N, L_best, err_best))\par
+    ylabel('Number of times observed')\par
+    xlabel('Number of successes')\par
+    xlim(-0.5,max(x)+.5)\par
+    ylim(0,max(y)*1.2)\par
+\par
+    show(block=False)\par
+\par
+main()\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+4.\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Wed Mar  7 16:08:27 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+#!/usr/bin/python\par
+\par
+from pylab import *\par
+import csv\par
+from scipy.stats import norm as gaussian\par
+from scipy.optimize import fmin\par
+\par
+\par
+def main():\par
+    height = loadtxt('p4 data.txt', delimiter=',')\par
+    x = height[:,0]\par
+    y = height[:,1]\par
+    m = height.shape[0]\par
+\par
+    z = []\par
+    for i in range(m):\par
+        z += [x[i]]*int(y[i])\par
+    n = len(z)\par
+    z = array(z)\par
+\par
+    # slow, inaccurate method\par
+    def fit_likelihood(a):\par
+        return -sum(log(gaussian.pdf((z-a[0])/a[1])/a[1]))\par
+    objective = fit_likelihood\par
+    a = [64.,6.]\par
+    result = fmin(objective, a)\par
+    mu, sigma = result[0], result[1]\par
+    print( "Numerical Parameter fits: ", (mu, sigma))\par
+    print( "\\tAverage Log-Likelihood: ", fit_likelihood(result)/n)\par
+\par
+    # fast, exact method\par
+    mu = sum(z)/float(n)\par
+    sigma = sqrt(sum((z-mu)**2)/n)\par
+    print( "Exact Parameter fits: ", (mu,sigma))\par
+    print( "\\tAverage Log-Likelihood: ", fit_likelihood((mu,sigma))/n)\par
+    print( "\\tn = : ", fit_likelihood((mu,sigma))/n)\par
+\par
+\par
+    u = linspace(min(z)*.95,max(z)*1.05, 256)\par
+    figure(1, figsize=(8,16))\par
+    subplot(3,1,1)\par
+\par
+    plot(u, n*gaussian.pdf((u-mu)/sigma)/sigma, 'b-')\par
+    width = .3\par
+    bar_ob = bar(x-width*.5, y, width, color='k')\par
+    xlim(min(u), max(u))\par
+    ylabel('Count', fontsize=18)\par
+    title('Best Fit Gaussian: $\\mu = %f$, $\\sigma = %f$'%(mu,sigma), fontsize=18)\par
+\par
+    subplot(3,1,2)\par
+    q = linspace(0,1,n)\par
+    plot(z,q,'ko', u, gaussian.cdf((u-mu)/sigma),'b-')\par
+    xlabel('Height (inches)', fontsize=18)\par
+    ylabel('Cumulative Probability', fontsize=18)\par
+    xlim(min(u), max(u))\par
+\par
+    subplot(3,1,3)\par
+    plot(gaussian.cdf((z-mu)/sigma), q, 'o', q, q, 'k-')\par
+    xlabel('Expected probability', fontsize=18)\par
+    ylabel('Observed probability', fontsize=18)\par
+\par
+    savefig('height_gaussian.png', bbox_inches='tight')\par
+    show()\par
+\par
+main()\par
+\par
+k = [1]\par
+k*2\par
+\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+5.\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Thu Mar 15 19:37:24 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import *\par
+from scipy import linalg\par
+import numpy\par
+from matplotlib.pyplot import *\par
+\par
+mesh = loadtxt('p5 data.txt', delimiter = ',')\par
+F = mesh[0:8,5]/100\par
+x = mesh[0:8,2]\par
+\par
+\par
+b = matrix([log(-log(1 - F[0])),log(-log(1 - F[1])),log(-log(1 - F[2])),log(-log(1 - F[3])),log(-log(1 - F[4])),log(-log(1 - F[5])),log(-log(1 - F[6])),log(-log(1 - F[7]))])\par
+b = b.T\par
+A = matrix([[log(x[0]),log(x[1]),log(x[2]),log(x[3]),log(x[4]),log(x[5]),log(x[6]),log(x[7])],[-1,-1,-1,-1,-1,-1,-1,-1]])\par
+A = A.T\par
+\par
+W = linalg.solve(A.T.dot(A), A.T.dot(b))\par
+n = W[0,0]\par
+lam = e**(W[1,0]/n)\par
+print(n,lam)\par
+\par
+t = linspace(min(x),max(x),100)\par
+fit = 1-e**(-(t/lam)**n)\par
+\par
+figure()\par
+scatter(x,F)\par
+plot(t,fit,'r')\par
+xlabel('particle size (mm)')\par
+ylabel('F(x)')\par
+legend(['Weibull','Data'],loc=0, framealpha=0.)\par
+title('Fit Weibull Distribution to the Data of Rock Size')\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+7.\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Wed Mar 14 13:25:05 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import *\par
+import numpy\par
+\par
+A = matrix([[1, 1/3,0,0,0],[0,0,1/3,0,0],[0,2/3,0,1/3,0],[0,0,2/3,0,0],[0,0,0,2/3,1]])\par
+P = A**10000\par
+\par
+print(P)\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+9.\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Tue Mar 13 20:11:12 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+from scipy import *\par
+import numpy\par
+from matplotlib.pyplot import *\par
+import math\par
+\par
+def ErlangB(lam, r, N):\par
+    j = 0\par
+    R = 0\par
+    while j < N+1:\par
+        R = ((lam/r)**j)/math.factorial(j) + R\par
+        j += 1\par
+    f = 1/math.factorial(N)\par
+    s = (lam/r)**N\par
+    t = R**(-1)\par
+    return (f*s*t)\par
+\par
+x = [ErlangB(1,8,0),ErlangB(1,8,1),ErlangB(1,8,2),ErlangB(1,8,3),ErlangB(1,8,4),ErlangB(1,8,5)]\par
+t = range(0,6)\par
+\par
+print(x)\par
+\par
+figure(1,figsize=(10,8))\par
+plot(t,x)\par
+xlabel('number of lines',fontsize = 25)\par
+ylabel('maxed out %',fontsize = 25)\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+10.\par
+(b)\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Tue Mar 13 20:54:29 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import *\par
+import numpy\par
+from matplotlib.pyplot import *\par
+\par
+day = load('bolideDayData.npy')\par
+day_1995 = day[0:19]\par
+\par
+figure(1,figsize=(8,6))\par
+bar(day_1995,0.5)\par
+ylim(0,1)\par
+xlabel('date (day from 2004)', fontsize = 20)\par
+title('shot-plot of arrival time of meteors',fontsize = 20)\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+\par
+(c),(d),(e).\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Fri Mar 16 01:38:07 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+from scipy import floor, cumsum, array, linspace, cos, pi, rand, loadtxt\par
+from scipy import *\par
+from scipy.stats import poisson\par
+from scipy.optimize import fminbound\par
+from matplotlib.pyplot import *\par
+import time\par
+import numpy\par
+\par
+#c------------------------------------------\par
+day = load('bolideDayData.npy')\par
+rank = linspace(1,280,280)\par
+    \par
+figure(1,figsize=(10,8))\par
+scatter(day,rank)\par
+xlabel('days', fontsize = 25)\par
+ylabel('ranks', fontsize = 25)\par
+\par
+#d------------------------------------------\par
+rate1 = -280/day[0]\par
+print(rate1)\par
+\par
+#e------------------------------------------\par
+rate2 = zeros((81,1))\par
+i = 1\par
+k = 0\par
+j = 0\par
+while i <= 81:\par
+    while j <= 45*i:\par
+        rate2[i-1] += 1\par
+        if k <= 279:\par
+            j = -day[279-k]\par
+            k += 1\par
+        else:\par
+            j = 45*i +1\par
+    i += 1\par
+sum(rate2)\par
+\par
+count = zeros((12,1))\par
+j = 0\par
+while j < 12:\par
+    i = 0\par
+    while i < 81:\par
+        if rate2[i] == j:\par
+            count[j] += 1\par
+        i += 1\par
+    j += 1\par
+\par
+x = linspace(0,11,12)\par
+\par
+figure(2,figsize=(10,8))\par
+bar(x,count[:,0])\par
+ylabel('frequency (unit = 45 days)',fontsize = 25)\par
+xlabel('number of meteors',fontsize = 25)  \par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+\par
+(f).\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Wed Mar 14 16:52:57 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import floor, cumsum, array, linspace, cos, pi, rand, loadtxt\par
+from scipy.stats import poisson\par
+from scipy.optimize import fminbound\par
+from matplotlib.pyplot import *\par
+import time\par
+import numpy\par
+from scipy import *\par
+\par
+day = load('bolideDayData.npy')\par
+\par
+rate2 = zeros((81,1))\par
+i = 1\par
+k = 0\par
+j = 0\par
+while i <= 81:\par
+    while j <= 45*i:\par
+        rate2[i-1] += 1\par
+        if k <= 279:\par
+            j = -day[279-k]\par
+            k += 1\par
+        else:\par
+            j = 45*i +1\par
+    i += 1\par
+sum(rate2)\par
+\par
+count = zeros((12,1))\par
+j = 0\par
+while j < 12:\par
+    i = 0\par
+    while i < 81:\par
+        if rate2[i] == j:\par
+            count[j] += 1\par
+        i += 1\par
+    j += 1\par
+\par
+def norm(x,e):\par
+    return sum(abs(x)**e)**(1./e)\par
+\par
+def rndBinomial(p, n, replicas=1):\par
+    if replicas == 1:\par
+        return int(sum(floor(rand(n) + p)))\par
+    trials = [ rndBinomial(p,n) for i in xrange(replicas)]\par
+    return trials\par
+\par
+def main():\par
+    y = count[:,0]\par
+    x = linspace(0,11,12)\par
+    N = sum(y)\par
+\par
+    Y = y*1./N\par
+    # distribution fitting\par
+    def fit_error(L_guess):\par
+        # calculate the distance between our guess and the data\par
+        z = poisson.pmf(x, L_guess)\par
+        return norm(Y-z, 1)/norm(Y,1) # can be any p-norm\par
+    L_best = fminbound(fit_error, 1e-5, 6-1e-5)\par
+    err_best = fit_error(L_best)\par
+    print("Best fit: L = %f,  error = %f"%(L_best, fit_error(L_best)))\par
+\par
+    # generate data for animation\par
+    F = [ (p, fit_error(p)) for p in linspace(1e-4,6-1e-4, 137) ]\par
+    u, v = map(array, zip(*F))\par
+\par
+    # draw basic figure\par
+    fig = figure()\par
+\par
+    subplot(2,1,2)\par
+    plot(u, v, 'b-')\par
+    #plot( L_best, fit_error(L_best), 'ko')\par
+    marker_fit_error = plot( u[2], v[2], 'ro').pop()\par
+    ylim(0,1)\par
+    xlabel('Poisson intensity $\\lambda$')\par
+\par
+    subplot(2,1,1)\par
+    plot(x, y, 'ko')\par
+    z = poisson.pmf(x, L_best)\par
+    width = .3\par
+    xw = x-width*.5\par
+    bar_ob = bar(xw, z*N, width, color='r')\par
+    ttl = 'N = %d observations, $\\lambda_\{best\} = %.3f$, $Err_\{best\} = %1.2g$'\par
+    title(ttl%(N, L_best, err_best))\par
+    ylabel('Number of times observed')\par
+    xlabel('Number of successes')\par
+    xlim(-0.5,max(x)+.5)\par
+    ylim(0,max(y)*1.2)\par
+\par
+    show(block=False)\par
+main()\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+\par
+(g)\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Wed Mar 14 17:49:14 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from pylab import *\par
+import csv\par
+from scipy.stats import norm as gaussian\par
+from scipy.optimize import fmin\par
+\par
+day = load('bolideDayData.npy')\par
+\par
+rate2 = zeros((81,1))\par
+i = 1\par
+k = 0\par
+j = 0\par
+while i <= 81:\par
+    while j <= 45*i:\par
+        rate2[i-1] += 1\par
+        if k <= 279:\par
+            j = -day[279-k]\par
+            k += 1\par
+        else:\par
+            j = 45*i +1\par
+    i += 1\par
+sum(rate2)\par
+\par
+count = zeros((12,1))\par
+j = 0\par
+while j < 12:\par
+    i = 0\par
+    while i < 81:\par
+        if rate2[i] == j:\par
+            count[j] += 1\par
+        i += 1\par
+    j += 1\par
+\par
+def main():\par
+    x = linspace(0,11,12)\par
+    y = count[:,0]\par
+    m = count.shape[0]\par
+\par
+    z = []\par
+    for i in range(m):\par
+        z += [x[i]]*int(y[i])\par
+    n = len(z)\par
+    z = array(z)\par
+\par
+    # slow, inaccurate method\par
+    def fit_likelihood(a):\par
+        return -sum(log(gaussian.pdf((z-a[0])/a[1])/a[1]))\par
+    objective = fit_likelihood\par
+    a = array([64.,6.])\par
+    result = fmin(objective, a)\par
+    mu, sigma = result[0], result[1]\par
+    print( "Numerical Parameter fits: ", (mu, sigma))\par
+    print( "\\tAverage Log-Likelihood: ", fit_likelihood(result)/n)\par
+\par
+    # fast, exact method\par
+    mu = sum(z)/float(n)\par
+    sigma = sqrt(sum((z-mu)**2)/n)\par
+    print( "Exact Parameter fits: ", (mu,sigma))\par
+    print( "\\tAverage Log-Likelihood: ", fit_likelihood((mu,sigma))/n)\par
+    print( "\\tn = : ", fit_likelihood((mu,sigma))/n)\par
+\par
+\par
+    u = linspace(min(z)*.95,max(z)*1.05, 256)\par
+    figure(1, figsize=(8,16))\par
+    subplot(3,1,1)\par
+\par
+    plot(u, n*gaussian.pdf((u-mu)/sigma)/sigma, 'b-')\par
+    width = .3\par
+    bar_ob = bar(x-width*.5, y, width, color='k')\par
+    xlim(min(u), max(u))\par
+    ylabel('Count', fontsize=18)\par
+    title('Best Fit Gaussian: $\\mu = %f$, $\\sigma = %f$'%(mu,sigma), fontsize=18)\par
+\par
+    subplot(3,1,2)\par
+    q = linspace(0,1,n)\par
+    plot(z,q,'ko', u, gaussian.cdf((u-mu)/sigma),'b-')\par
+    xlabel('Height (inches)', fontsize=18)\par
+    ylabel('Cumulative Probability', fontsize=18)\par
+    xlim(min(u), max(u))\par
+\par
+    subplot(3,1,3)\par
+    plot(gaussian.cdf((z-mu)/sigma), q, 'o', q, q, 'k-')\par
+    xlabel('Expected probability', fontsize=18)\par
+    ylabel('Observed probability', fontsize=18)\par
+\par
+    savefig('height_gaussian.png', bbox_inches='tight')\par
+    show()\par
+\par
+main()\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+\par
+(h).\par
+
+\pard\f1\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Fri Mar 16 03:58:53 2018\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import floor, cumsum, array, linspace, cos, pi, rand, loadtxt\par
+from scipy import *\par
+from scipy.stats import poisson\par
+from scipy.optimize import fminbound\par
+from matplotlib.pyplot import *\par
+import time\par
+import numpy\par
+\par
+day = load('bolideDayData.npy')\par
+\par
+interval = zeros((279,1))\par
+i = 0\par
+while i < 279:\par
+    interval[i] = (-day[279-i-1])- (-day[279-i])\par
+    i += 1\par
+\par
+figure(1,figsize = (8,6))\par
+hist(interval)\par
+xlabel('number of days',fontsize = 20)\par
+ylabel('frequency (unit = interval)',fontsize = 20)\par
+
+\pard\sa200\sl276\slmult1\f0\lang9\par
+\par
+\par
+}
+ 

@@ -1,0 +1,495 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}{\f1\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.16299}\viewkind4\uc1 
+\pard\f0\fs22 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Thu Apr  5 17:13:32 2018\par
+Probelm 2 Part (a)\par
+\par
+@author: Jiaqi Li\par
+"""\par
+from pylab import *\par
+from scipy import *\par
+import numpy\par
+\par
+def printbinarymatrix(A):\par
+    m,n = A.shape\par
+    s = '\\n'.join([ \\\par
+            '|%s|'%''.join([( ' ' if i < 0.5 else '#' ) for i in row]) for row in A])\par
+    #s = '\\n'.join(['+%s+'%('-'*n),s,'+%s+'%('-'*n)])\par
+    s = '\\n'.join(['+%s+'%('-'*n),s,'+%s+'%('-'*n)])\par
+    print(s)\par
+    return\par
+\par
+def calc_percolation_depth(A, i0=None):\par
+    """\par
+    Given an array A of \{0,1\}'s, find the farthest across the\par
+    matrix we can walk on 0-entries, when\par
+    using a von Neumann neighborhood, if we start\par
+    at the left side in row i0.\par
+\par
+    If i0 == None, return the maximum over all initial rows.\par
+    """\par
+\par
+    upper_bound = A.shape[1]\par
+    if i0 == None:\par
+        return max([calc_percolation_depth(A,i) for i in range(upper_bound)])\par
+\par
+    neighbors = [(1,0), (-1,0), (0,1), (0,-1)]\par
+\par
+    # to track which sites we have visited ...\par
+    visited = 0*A\par
+    def next(i,j):\par
+        if i < 0 or i >= A.shape[0] or j < 0:\par
+            return 0\par
+        if j >= upper_bound:\par
+            return upper_bound\par
+        if visited[i,j] == 1:\par
+            return 0\par
+        visited[i,j] = 1\par
+        if A[i,j] > 0.5:\par
+            return j\par
+        return max([next(i+dx,j+dy) for (dx,dy) in neighbors])\par
+    return next(i0,0)\par
+\par
+def p3():\par
+    p = 0.3 \par
+    N = 40\par
+    A = floor(rand(N,N) + p)\par
+    return A\par
+def p4():\par
+    p = 0.4 \par
+    N = 40\par
+    A = floor(rand(N,N) + p)\par
+    return A\par
+def p45():\par
+    p = 0.45 \par
+    N = 40\par
+    A = floor(rand(N,N) + p)\par
+    return A\par
+def p5():\par
+    p = 0.5\par
+    N = 40\par
+    A = floor(rand(N,N) + p)\par
+    return A\par
+def p6():\par
+    p = 0.6 \par
+    N = 40\par
+    A = floor(rand(N,N) + p)\par
+    return A\par
+\par
+#The following code is for the map:\par
+#assert set([0,1]) == set(map(int,A.flatten()))\par
+#print("Here we have a %dx%d matrix, with fill fraction %f"%(N,N,p))\par
+#printbinarymatrix(A.T)\par
+#print("If we start on the top, how far toward the bottom can we move on blanks?")\par
+#for i in range(N):\par
+#    d = calc_percolation_depth(A,i)\par
+#    print("From column %2d, we go %2d steps down"%(i,d))\par
+#print("Max depth: ", calc_percolation_depth(A))\par
+#print("Now, double-check with your own eyes.  Are all of these correct?")\par
+\par
+\par
+M3 = zeros(1000)\par
+for i in range(1000):\par
+    print('i = %d' %i)\par
+    M3[i] = calc_percolation_depth(p3())\par
+M3.sort()\par
+\par
+M4 = zeros(1000)\par
+for i in range(1000):\par
+    print('i = %d' %i)\par
+    M4[i] = calc_percolation_depth(p4())\par
+M4.sort()\par
+\par
+M45 = zeros(1000)\par
+for i in range(1000):\par
+    print('i = %d' %i)\par
+    M45[i] = calc_percolation_depth(p45())\par
+M45.sort()\par
+\par
+M5 = zeros(1000)\par
+for i in range(1000):\par
+    print('i = %d' %i)\par
+    M5[i] = calc_percolation_depth(p5())\par
+M5.sort()\par
+\par
+M6 = zeros(1000)\par
+for i in range(1000):\par
+    print('i = %d' %i)\par
+    M6[i] = calc_percolation_depth(p6())\par
+M6.sort()\par
+\par
+g3 = zeros(41)\par
+x = linspace(0,40,41)\par
+j,k = 0,0\par
+while k < 41:\par
+    print('x = %d' %k)\par
+    for i in range(1000):\par
+        if k == M3[i]:\par
+            j += 1\par
+    g3[k] = j/1000\par
+    k += 1\par
+\par
+g4 = zeros(41)\par
+x = linspace(0,40,41)\par
+j,k = 0,0\par
+while k < 41:\par
+    print('x = %d' %k)\par
+    for i in range(1000):\par
+        if k == M4[i]:\par
+            j += 1\par
+    g4[k] = j/1000\par
+    k += 1\par
+    \par
+g45 = zeros(41)\par
+x = linspace(0,40,41)\par
+j,k = 0,0\par
+while k < 41:\par
+    print('x = %d' %k)\par
+    for i in range(1000):\par
+        if k == M45[i]:\par
+            j += 1\par
+    g45[k] = j/1000\par
+    k += 1\par
+    \par
+g5 = zeros(41)\par
+x = linspace(0,40,41)\par
+j,k = 0,0\par
+while k < 41:\par
+    print('x = %d' %k)\par
+    for i in range(1000):\par
+        if k == M5[i]:\par
+            j += 1\par
+    g5[k] = j/1000\par
+    k += 1\par
+    \par
+g6 = zeros(41)\par
+x = linspace(0,40,41)\par
+j,k = 0,0\par
+while k < 41:\par
+    print('x = %d' %k)\par
+    for i in range(1000):\par
+        if k == M6[i]:\par
+            j += 1\par
+    g6[k] = j/1000\par
+    k += 1\par
+    \par
+figure(2,figsize = (12,9))\par
+plot(g3, 'o-')\par
+plot(g4, 'o-')\par
+plot(g45, 'o-')\par
+plot(g5, 'o-')\par
+plot(g6, 'o-')\par
+xlabel('Percolation Depth x',fontsize = 20)\par
+ylabel('Fraction of Matrices with Percolation Depth <= x',fontsize = 20)\par
+legend(['p=0.3','p=0.4','p=0.45','p=0.5','p=0.6'], loc=0, framealpha=1)\par
+
+\pard\sa200\sl276\slmult1\f1\lang9\par
+\par
+
+\pard\f0\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Sat Apr  7 21:21:47 2018\par
+Problem 2 Part (c)\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from pylab import *\par
+from scipy import *\par
+import numpy\par
+\par
+def printbinarymatrix(A):\par
+    m,n = A.shape\par
+    s = '\\n'.join([ \\\par
+            '|%s|'%''.join([( ' ' if i < 0.5 else '#' ) for i in row]) for row in A])\par
+    #s = '\\n'.join(['+%s+'%('-'*n),s,'+%s+'%('-'*n)])\par
+    s = '\\n'.join(['+%s+'%('-'*n),s,'+%s+'%('-'*n)])\par
+    print(s)\par
+    return\par
+\par
+def calc_percolation_depth(A, i0=None):\par
+    """\par
+    Given an array A of \{0,1\}'s, find the farthest across the\par
+    matrix we can walk on 0-entries, when\par
+    using a von Neumann neighborhood, if we start\par
+    at the left side in row i0.\par
+\par
+    If i0 == None, return the maximum over all initial rows.\par
+    """\par
+\par
+    upper_bound = A.shape[1]\par
+    if i0 == None:\par
+        return max([calc_percolation_depth(A,i) for i in range(upper_bound)])\par
+\par
+    neighbors = [(1,0), (-1,0), (0,1), (0,-1)]\par
+\par
+    # to track which sites we have visited ...\par
+    visited = 0*A\par
+    def next(i,j):\par
+        if i < 0 or i >= A.shape[0] or j < 0:\par
+            return 0\par
+        if j >= upper_bound:\par
+            return upper_bound\par
+        if visited[i,j] == 1:\par
+            return 0\par
+        visited[i,j] = 1\par
+        if A[i,j] > 0.5:\par
+            return j\par
+        return max([next(i+dx,j+dy) for (dx,dy) in neighbors])\par
+    return next(i0,0)\par
+\par
+\par
+M5 = zeros(31)\par
+M = zeros(1001)\par
+p = 0.3\par
+N = 5\par
+i = 0\par
+while p < 0.6001:\par
+    print('p = %f' %p)\par
+    n = 0\par
+    for j in range(1001):\par
+        A = floor(rand(N,N) + p)\par
+        M[j] =calc_percolation_depth(A)\par
+    for k in range(1001):\par
+        if M[k] == N:\par
+            n += 1\par
+    M5[i] = n/1001\par
+    p += 0.01\par
+    i += 1\par
+M5 = sorted(M5,reverse=True)\par
+\par
+M10 = zeros(31)\par
+M = zeros(1001)\par
+p = 0.3\par
+N = 10\par
+i = 0\par
+while p < 0.6001:\par
+    print('p = %f' %p)\par
+    n = 0\par
+    for j in range(1001):\par
+        A = floor(rand(N,N) + p)\par
+        M[j] =calc_percolation_depth(A)\par
+    for k in range(1001):\par
+        if M[k] == N:\par
+            n += 1\par
+    M10[i] = n/1001\par
+    p += 0.01\par
+    i += 1\par
+M10 = sorted(M10,reverse=True)\par
+\par
+M20 = zeros(31)\par
+M = zeros(1001)\par
+p = 0.3\par
+N = 20\par
+i = 0\par
+while p < 0.6001:\par
+    print('p = %f' %p)\par
+    n = 0\par
+    for j in range(1001):\par
+        A = floor(rand(N,N) + p)\par
+        M[j] =calc_percolation_depth(A)\par
+    for k in range(1001):\par
+        if M[k] == N:\par
+            n += 1\par
+    M20[i] = n/1001\par
+    p += 0.01\par
+    i += 1\par
+M20 = sorted(M20,reverse=True)\par
+\par
+M50 = zeros(31)\par
+M = zeros(1001)\par
+p = 0.3\par
+N = 50\par
+i = 0\par
+while p < 0.6001:\par
+    print('p = %f' %p)\par
+    n = 0\par
+    for j in range(1001):\par
+        A = floor(rand(N,N) + p)\par
+        M[j] =calc_percolation_depth(A)\par
+    for k in range(1001):\par
+        if M[k] == N:\par
+            n += 1\par
+    M50[i] = n/1001\par
+    p += 0.01\par
+    i += 1\par
+M50 = sorted(M50,reverse=True)\par
+\par
+sys.setrecursionlimit(10000)\par
+M100 = zeros(31)\par
+M = zeros(1001)\par
+p = 0.3\par
+N = 100\par
+i = 0\par
+while p < 0.6001:\par
+    print('p = %f' %p)\par
+    n = 0\par
+    for j in range(1001):\par
+        print('j = %d' %j)\par
+        A = floor(rand(N,N) + p)\par
+        M[j] =calc_percolation_depth(A)\par
+    for k in range(1001):\par
+        if M[k] == N:\par
+            n += 1\par
+    M100[i] = n/1001\par
+    p += 0.01\par
+    i += 1\par
+M100 = sorted(M100,reverse=True)\par
+    \par
+figure(2,figsize = (10,8))\par
+plot(linspace(0.3,0.6,31),M5)\par
+plot(linspace(0.3,0.6,31),M10)\par
+plot(linspace(0.3,0.6,31),M20)\par
+plot(linspace(0.3,0.6,31),M50)\par
+plot(linspace(0.3,0.6,31),M100)\par
+xlabel('Fill Fraction p',fontsize = 18)\par
+ylabel('Fraction of Matrices that Percolate All The Way Through',fontsize = 15)\par
+legend(['N=5','N=10','N=20','N=50','N=100'], loc=0, framealpha=1)\par
+
+\pard\sa200\sl276\slmult1\f1\lang9\par
+\par
+
+\pard\f0\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Sun Apr  8 12:58:54 2018\par
+Problem 4 Part (b)\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import sqrt\par
+import scipy.integrate\par
+from matplotlib.pyplot import *\par
+from numpy import *\par
+from numpy.linalg.linalg import norm\par
+\par
+\par
+def stream_plot(F, domain, **kwargs):\par
+    dx, dy = domain[0][2]*1j, domain[1][2]*1j\par
+    Y, X = mgrid[domain[1][1]:domain[1][0]:dy, domain[0][0]:domain[0][1]:dx]\par
+    U = 0*X\par
+    V = 0*Y\par
+    s = Y.shape\par
+    for x in range(s[0]):\par
+        for y in range(s[1]):\par
+            vec = F(X[x,y], Y[x,y])\par
+            U[x,y] = vec[0]\par
+            V[x,y] = vec[1]\par
+    #UV = vectorize(F, otypes=[numpy.ndarray, numpy.ndarray])(X, Y)\par
+    return streamplot(X[0,:], Y[:,0], U, V, **kwargs)\par
+\par
+def vector_field(X, t):\par
+    # The differenti equations are\par
+    #\par
+    #    dtheta\par
+    #    --     = s\par
+    #    dt\par
+    #\par
+    #    ds\par
+    #    -- = -sin(theta)\par
+    #    dt\par
+    s = X[0]\par
+    theta = X[1]\par
+    return array([s,  -sin(theta)])\par
+\par
+\par
+def main():\par
+    s = 0.1\par
+    theta = pi/4\par
+\par
+    F = lambda x,y : vector_field((x,y), 0)\par
+    figure(1,figsize = (10,8))\par
+    stream_plot(F, ((-10,10,100),(-12,18,150)))\par
+    show()\par
+\par
+main()\par
+
+\pard\sa200\sl276\slmult1\f1\lang9\par
+\par
+
+\pard\f0\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Mon Apr  9 17:11:56 2018\par
+Problem 5 Part (d)\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import *\par
+import scipy.integrate\par
+from matplotlib.pyplot import *\par
+from numpy import *\par
+\par
+def system(X,t):\par
+    #The differential equations are:\par
+    #\par
+    #    dtheta\par
+    #    --     = u = -e^(theta)*x + constant\par
+    #    dx\par
+    #\par
+    #    du\par
+    #    --     = -e^(theta)\par
+    #    dx\par
+    u = X[0]\par
+    theta = X[1]\par
+    return array([u, -exp(theta)])\par
+\par
+x = linspace(0,2.5,101)\par
+m = [-1,0,1,2,3,4]\par
+\par
+def M(m):\par
+    #I do not know about the initial condition for u\par
+    #Temporary set u = 0 at m = -1,0,1,2,3,4\par
+    x0 = array([0,m])\par
+    x_hat = scipy.integrate.odeint(system, x0, x)\par
+    return x_hat\par
+\par
+figure(1, figsize = (10,8))\par
+plot(x,M(m[0])[:,1])\par
+plot(x,M(m[1])[:,1])\par
+plot(x,M(m[2])[:,1])\par
+plot(x,M(m[3])[:,1])\par
+plot(x,M(m[4])[:,1])\par
+plot(x,M(m[5])[:,1])\par
+xlabel('Cross-Section length x',fontsize = 20)\par
+ylabel('Temperature At Cross-Section x',fontsize = 20)\par
+legend(['m=-1','m=0','m=1','m=2','m=3','m=4'],loc=0,framealpha=1)\par
+\par
+for i in range(101):\par
+    if (M(m[5])[i,1] < 1.10 and M(m[5])[i,1] > 1):\par
+        n = i\par
+        print('At m=4 : %d' %(n+1))\par
+\par
+L = 2*n*2.5/100\par
+\par
+print(L)\par
+\par
+\par
+
+\pard\sa200\sl276\slmult1\f1\lang9\par
+
+\pard\f0\lang1033 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Mon Apr  9 13:59:03 2018\par
+Problem 6\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import *\par
+import numpy\par
+from pylab import *\par
+\par
+x = linspace(0,7e6,7e6+1)\par
+sol = 1500*scipy.special.erf(x/(2*sqrt(2800*200000)))\par
+figure(1,figsize = (10,8))\par
+plot(sol)\par
+xlabel('Depth x of the Earth',fontsize = 25)\par
+ylabel('Temperature at Depth x',fontsize = 25)\par
+title('Temperature Changes Due to Depth of the Earth',fontsize = 25)\par
+\par
+
+\pard\sa200\sl276\slmult1\f1\lang9\par
+}
+ 

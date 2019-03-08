@@ -1,0 +1,347 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}{\f1\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.16299}\viewkind4\uc1 
+\pard\f0\fs22 # -*- coding: utf-8 -*-\par
+"""\par
+Created on Fri Apr 20 18:08:54 2018\par
+\par
+This transcript focuses on fitting data and full cycle simulation of Ebola outbreak.\par
+\par
+@author: Jiaqi Li\par
+"""\par
+\par
+from scipy import *\par
+from scipy import integrate\par
+import numpy\par
+from matplotlib.pyplot import *\par
+from scipy.optimize import fmin\par
+\par
+"Guinea has total death of 2536 during outbreak"\par
+"Guinea has max infected of 3804 during outbreak"\par
+\par
+#Basic model----------------------------------------------------\par
+death = loadtxt('death.txt')\par
+infected = loadtxt('infected.txt')\par
+date = loadtxt('Date.txt').tolist()\par
+\par
+N = 3156\par
+delta = 0.0225\par
+beta = 0.0676\par
+\par
+def system(X,t):\par
+    S = X[0]\par
+    I = X[1]\par
+    D = X[2]\par
+    T = X[3]\par
+    v = beta*(I+D)/(I+S+D)\par
+    return array([-v*S, \\\par
+                  v*S-delta*I, \\\par
+                  delta*I, \\\par
+                  v*S])\par
+\par
+t = linspace(0,90,91)\par
+x0 = array([N,648,430,648])\par
+x_hat = integrate.odeint(system, x0, t)\par
+t_full = linspace(0,717,718)\par
+x_full = integrate.odeint(system,x0,t_full)\par
+\par
+figure(1,figsize=(10,8))\par
+plot(t_full,x_full[:,0])\par
+plot(t_full,x_full[:,1])\par
+plot(t_full,x_full[:,2])\par
+plot(t_full,x_full[:,3])\par
+ylabel('Number of People')\par
+xlabel('Days')\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['Susceptible','Infected','Death','Total Infected'],loc=0,framealpha=1)\par
+title('Eradication of Ebola')\par
+\par
+figure(2,figsize=(10,8))\par
+plot(date,x_hat[:,3])\par
+plot(date,infected)\par
+ylabel('Infected')\par
+xlabel('Days')\par
+grid(axis='y', linestyle='-')\par
+legend(['Simulation','Obsevered'],loc=0,framealpha=1)\par
+title('Growth of Total Infected')\par
+\par
+figure(3,figsize=(10,8))\par
+plot(date,x_hat[:,2])\par
+plot(date,death)\par
+ylabel('Death')\par
+xlabel('Days')\par
+grid(axis='y', linestyle='-')\par
+legend(['Simulation','Obsevered'],loc=0,framealpha=1)\par
+title('Growth of Total Death')\par
+\par
+#fmin-----------------------------------------------------------\par
+def system(X,t,delta, beta):\par
+    S = X[0]\par
+    I = X[1]\par
+    D = X[2]\par
+    T = X[3]\par
+    v = beta*(I+D)/(I+S+D)\par
+    return array([-v*S, \\\par
+                  v*S-delta*I, \\\par
+                  delta*I, \\\par
+                  v*S])\par
+def Error(para):\par
+    N = para[0]\par
+    delta = para[1]\par
+    beta = para[2]\par
+    t = linspace(0,90,91)\par
+    x0 = array([N,648,430,648])\par
+    x_hat = integrate.odeint(system, x0, t, args=(delta,beta))\par
+    err = sum(abs(x_hat[:,3]-infected))+sum(abs(x_hat[:,2]-death))\par
+    return err\par
+    \par
+para = [N,0,0]\par
+paraBest = fmin(Error,para)\par
+\par
+#Complex model----------------------------------------------------\par
+death = loadtxt('death.txt')\par
+infected = loadtxt('infected.txt')\par
+date = loadtxt('Date.txt').tolist()\par
+\par
+N = 3156\par
+delta = 0.07\par
+beta = 0.08\par
+w = 0.000000001\par
+sigma = 0.00001\par
+lam = 0.06\par
+theta = 0.01\par
+mu = 0.001\par
+\par
+def system(X,t):\par
+    S = X[0]\par
+    I = X[1]\par
+    D = X[2]\par
+    M = X[3]\par
+    H = X[4]\par
+    T = X[5]\par
+    v = beta*(I+D)/(I+S+D)\par
+    return array([-v*S-w*S, \\\par
+                  v*S-delta*I-lam*I-sigma*I, \\\par
+                  delta*I+mu*H, \\\par
+                  w*S+sigma*I+theta*H, \\\par
+                  lam*I-mu*H-theta*H, \\\par
+                  v*S])\par
+\par
+t = linspace(0,90,91)\par
+x0 = array([N,648,430,22,87,648])\par
+x_hat = integrate.odeint(system, x0, t)\par
+t_full = linspace(0,717,718)\par
+x_full = integrate.odeint(system,x0,t_full)\par
+\par
+figure(4,figsize=(12,6))\par
+plot(t_full,x_full[:,0])\par
+plot(t_full,x_full[:,1])\par
+plot(t_full,x_full[:,2])\par
+plot(t_full,x_full[:,3])\par
+plot(t_full,x_full[:,4])\par
+plot(t_full,x_full[:,5],dashes=[5, 5], label='Using the dashes parameter')\par
+ylabel('Number of People',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['Susceptible','Infected','Death','Immune','Isolated','Total Infected'],loc=1,framealpha=1,fontsize=15)\par
+title('Eradication of Ebola Without Effective Medicine and Vaccine',fontsize=20)\par
+\par
+figure(5,figsize=(10,8))\par
+plot(date,x_hat[:,5])\par
+plot(date,infected)\par
+ylabel('Infected',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='y', linestyle='-')\par
+legend(['Simulation','Obsevered'],loc=0,framealpha=1,fontsize=15)\par
+title('Growth of Total Infection',fontsize=20)\par
+\par
+figure(6,figsize=(10,8))\par
+plot(date,x_hat[:,2])\par
+plot(date,death)\par
+ylabel('Death',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='y', linestyle='-')\par
+legend(['Simulation','Obsevered'],loc=0,framealpha=1,fontsize=20)\par
+title('Growth of Total Death',fontsize=20)\par
+\par
+\par
+#Full-Simulatoin model----------------------------------------------------\par
+death = loadtxt('death.txt')\par
+infected = loadtxt('infected.txt')\par
+date = loadtxt('Date.txt').tolist()\par
+\par
+N = 3804\par
+delta = 0.07\par
+beta = 0.08\par
+w = 0.000000001\par
+sigma = 0.00001\par
+lam = 0.06\par
+theta = 0.01\par
+mu = 0.001\par
+\par
+def system(X,t):\par
+    S = X[0]\par
+    I = X[1]\par
+    D = X[2]\par
+    M = X[3]\par
+    H = X[4]\par
+    T = X[5]\par
+    v = beta*(I+D)/(I+S+D)\par
+    return array([-v*S-w*S, \\\par
+                  v*S-delta*I-lam*I-sigma*I, \\\par
+                  delta*I+mu*H, \\\par
+                  w*S+sigma*I+theta*H, \\\par
+                  lam*I-mu*H-theta*H, \\\par
+                  v*S])\par
+\par
+x0 = array([N,1,0,0,0,1])\par
+t_full = linspace(0,730,731)\par
+x_full = integrate.odeint(system,x0,t_full)\par
+\par
+figure(7,figsize=(12,6))\par
+plot(t_full,x_full[:,0])\par
+plot(t_full,x_full[:,1])\par
+plot(t_full,x_full[:,2])\par
+plot(t_full,x_full[:,3])\par
+plot(t_full,x_full[:,4])\par
+plot(t_full,x_full[:,5],dashes=[5, 5], label='Using the dashes parameter')\par
+ylabel('Number of People',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['Susceptible','Infected','Death','Immune','Isolated','Total Infected'],loc=0,framealpha=1,fontsize=12)\par
+title('Eradication of Ebola Without Effective Medicine and Vaccine (Full Cycle)',fontsize=18)\par
+\par
+\par
+#M&V available model----------------------------------------------------\par
+death = loadtxt('death.txt')\par
+infected = loadtxt('infected.txt')\par
+date = loadtxt('Date.txt').tolist()\par
+\par
+N = 3804\par
+delta = 0.07\par
+beta = 0.08\par
+w1 = 0.01\par
+w2 = 0.03\par
+w3 = 0.09\par
+sigma = 0.00001\par
+lam = 0.06\par
+theta = 0.6\par
+mu = 0.001\par
+\par
+x0 = array([N,1,0,0,0,1])\par
+t_full = linspace(0,299,300)\par
+\par
+def system1(X,t):\par
+    S = X[0]\par
+    I = X[1]\par
+    D = X[2]\par
+    M = X[3]\par
+    H = X[4]\par
+    T = X[5]\par
+    v = beta*(I+D)/(I+S+D)\par
+    return array([-v*S-w1*S, \\\par
+                  v*S-delta*I-lam*I-sigma*I, \\\par
+                  delta*I+mu*H, \\\par
+                  w1*S+sigma*I+theta*H, \\\par
+                  lam*I-mu*H-theta*H, \\\par
+                  v*S])\par
+\par
+x_full_1 = integrate.odeint(system1,x0,t_full)    \par
+    \par
+def system2(X,t):\par
+    S = X[0]\par
+    I = X[1]\par
+    D = X[2]\par
+    M = X[3]\par
+    H = X[4]\par
+    T = X[5]\par
+    v = beta*(I+D)/(I+S+D)\par
+    return array([-v*S-w2*S, \\\par
+                  v*S-delta*I-lam*I-sigma*I, \\\par
+                  delta*I+mu*H, \\\par
+                  w2*S+sigma*I+theta*H, \\\par
+                  lam*I-mu*H-theta*H, \\\par
+                  v*S])    \par
+\par
+x_full_2 = integrate.odeint(system2,x0,t_full)\par
+    \par
+def system3(X,t):\par
+    S = X[0]\par
+    I = X[1]\par
+    D = X[2]\par
+    M = X[3]\par
+    H = X[4]\par
+    T = X[5]\par
+    v = beta*(I+D)/(I+S+D)\par
+    return array([-v*S-w3*S, \\\par
+                  v*S-delta*I-lam*I-sigma*I, \\\par
+                  delta*I+mu*H, \\\par
+                  w3*S+sigma*I+theta*H, \\\par
+                  lam*I-mu*H-theta*H, \\\par
+                  v*S])\par
+    \par
+x_full_3 = integrate.odeint(system3,x0,t_full)\par
+\par
+figure(8,figsize=(6,8))\par
+plot(t_full,x_full_1[:,1])\par
+plot(t_full,x_full_2[:,1])\par
+plot(t_full,x_full_3[:,1])\par
+ylabel('Infected',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['w=0.01','w=0.03','w=0.09'],loc=1,framealpha=1,fontsize=20)\par
+title('Infection With Vaccine & Medicine',fontsize=20)\par
+\par
+figure(9,figsize=(6,8))\par
+plot(t_full,x_full_1[:,2])\par
+plot(t_full,x_full_2[:,2])\par
+plot(t_full,x_full_3[:,2])\par
+ylabel('Death',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['w=0.01','w=0.03','w=0.09'],loc=0,framealpha=1,fontsize=20)\par
+title('Total Death With Vaccine & Medicine',fontsize=20)\par
+\par
+figure(10,figsize=(6,8))\par
+plot(t_full,x_full_1[:,3])\par
+plot(t_full,x_full_2[:,3])\par
+plot(t_full,x_full_3[:,3])\par
+ylabel('Immune',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['w=0.01','w=0.03','w=0.09'],loc=0,framealpha=1,fontsize=20)\par
+title('Total Immune With Vaccine & Medicine',fontsize=20)\par
+\par
+figure(11,figsize=(6,8))\par
+plot(t_full,x_full_1[:,5])\par
+plot(t_full,x_full_2[:,5])\par
+plot(t_full,x_full_3[:,5])\par
+ylabel('Total Infected',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['w=0.01','w=0.03','w=0.09'],loc=0,framealpha=1,fontsize=20)\par
+title('Total Infection With Vaccine & Medicine',fontsize=20)\par
+\par
+figure(12,figsize=(12,6))\par
+plot(t_full,x_full_3[:,0])\par
+plot(t_full,x_full_3[:,1])\par
+plot(t_full,x_full_3[:,2])\par
+plot(t_full,x_full_3[:,3])\par
+plot(t_full,x_full_3[:,4])\par
+plot(t_full,x_full_3[:,5],dashes=[5, 5], label='Using the dashes parameter')\par
+ylabel('Number of People',fontsize=20)\par
+xlabel('Days',fontsize=20)\par
+grid(axis='x', linestyle='-')\par
+grid(axis='y', linestyle='-')\par
+legend(['Susceptible','Infected','Death','Immune','Isolated','Total Infected'],loc=0,framealpha=1,fontsize=12)\par
+title('Eradication of Ebola With Effective Medicine and Vaccine (Full Cycle)',fontsize=20)\par
+
+\pard\sa200\sl276\slmult1\f1\lang9\par
+}
+ 
